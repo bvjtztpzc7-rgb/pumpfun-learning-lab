@@ -319,6 +319,102 @@
   });
 
   
+const chartPanel = document.createElement("section");
+chartPanel.className = "panel";
+
+const chartTitle = document.createElement("h2");
+chartTitle.textContent = "Grafico didattico";
+
+const chartDescription = document.createElement("p");
+chartDescription.textContent =
+  "Serie di prezzi interamente simulata. Ogni aggiornamento genera un nuovo scenario, non una previsione.";
+
+const chartCanvas = document.createElement("canvas");
+chartCanvas.width = 600;
+chartCanvas.height = 260;
+chartCanvas.style.width = "100%";
+chartCanvas.style.maxWidth = "100%";
+chartCanvas.style.height = "auto";
+chartCanvas.setAttribute("role", "img");
+chartCanvas.setAttribute(
+  "aria-label",
+  "Grafico di una serie di prezzi simulati"
+);
+
+const chartButton = document.createElement("button");
+chartButton.textContent = "Genera scenario simulato";
+
+const chartNote = document.createElement("p");
+chartNote.className = "result";
+
+function drawDemoChart() {
+  const ctx = chartCanvas.getContext("2d");
+  if (!ctx) {
+    chartNote.textContent = "Il grafico non è disponibile in questo browser.";
+    return;
+  }
+
+  const values = [100];
+  for (let i = 1; i < 30; i++) {
+    const previous = values[i - 1];
+    const change = (Math.random() - 0.5) * 8;
+    values.push(Math.max(1, previous + change));
+  }
+
+  const width = chartCanvas.width;
+  const height = chartCanvas.height;
+  const padding = 35;
+  const min = Math.min(...values) - 3;
+  const max = Math.max(...values) + 3;
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "#dddddd";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const y = padding + i * (height - 2 * padding) / 4;
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(width - padding, y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "#2563eb";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+
+  values.forEach((value, i) => {
+    const x = padding + i * (width - 2 * padding) / (values.length - 1);
+    const y = height - padding -
+      (value - min) * (height - 2 * padding) / (max - min);
+
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+
+  ctx.stroke();
+
+  chartNote.textContent =
+    "Scenario generato: valore iniziale 100, valore finale " +
+    values[values.length - 1].toFixed(2) +
+    ". Dati fittizi.";
+}
+
+chartButton.addEventListener("click", drawDemoChart);
+
+chartPanel.append(
+  chartTitle,
+  chartDescription,
+  chartCanvas,
+  chartButton,
+  chartNote
+);
+
+document.body.appendChild(chartPanel);
+drawDemoChart();
+
 const labButton = document.createElement("button");
 labButton.textContent = "Avvia analisi didattica";
 
