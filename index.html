@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pumpfun Learning Lab</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: var(--tg-theme-bg-color, #10131c);
+      color: var(--tg-theme-text-color, #ffffff);
+      font-family: -apple-system, sans-serif;
+    }
+    .card {
+      padding: 16px;
+      margin: 14px 0;
+      border-radius: 16px;
+      background: var(--tg-theme-secondary-bg-color, #202532);
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--tg-theme-button-color, #3686f7);
+      color: var(--tg-theme-button-text-color, white);
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .muted { opacity: .7; font-size: 13px; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #7774;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔬 Pumpfun Learning Lab</h2>
+  <p class="muted">
+    Laboratorio educativo · Nessun ordine reale
+  </p>
+
+  <div class="card">
+    <h3>Analisi di mercato</h3>
+    <p id="status">Pronto per iniziare.</p>
+    <button id="analyze">Avvia analisi didattica</button>
+  </div>
+
+  <div class="card">
+    <h3>Monete osservate</h3>
+    <div id="results">
+      Nessun dato analizzato.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Simulazione dei rischi</h3>
+    <p>
+      In una fase successiva potrai studiare la volatilità,
+      le variazioni di prezzo e gli effetti ipotetici di
+      costi e slippage.
+    </p>
+    <p class="muted">
+      I dati dimostrativi non rappresentano prezzi reali.
+    </p>
+  </div>
+
+  <script>
+    const app = window.Telegram?.WebApp;
+    app?.ready();
+    app?.expand();
+
+    document.getElementById("analyze").onclick = () => {
+      document.getElementById("status").textContent =
+        "Test dell'interfaccia completato.";
+
+      document.getElementById("results").innerHTML = `
+        <div class="row">
+          <span>MONETA DEMO A</span>
+          <span>Dati illustrativi</span>
+        </div>
+        <div class="row">
+          <span>MONETA DEMO B</span>
+          <span>Dati illustrativi</span>
+        </div>
+        <div class="row">
+          <span>MONETA DEMO C</span>
+          <span>Dati illustrativi</span>
+        </div>
+      `;
+    };
+  </script>
+</body>
+</html>
