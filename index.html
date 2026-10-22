@@ -415,6 +415,64 @@ chartPanel.append(
 document.body.appendChild(chartPanel);
 drawDemoChart();
 
+const volatilityPanel = document.createElement("section");
+volatilityPanel.className = "panel";
+
+const volatilityTitle = document.createElement("h2");
+volatilityTitle.textContent = "Riepilogo delle oscillazioni";
+
+const volatilityDescription = document.createElement("p");
+volatilityDescription.textContent =
+  "Il calcolo usa la serie simulata del grafico. Non misura la volatilità reale di un token.";
+
+const volatilityResult = document.createElement("div");
+volatilityResult.className = "result";
+
+const volatilityButton = document.createElement("button");
+volatilityButton.textContent = "Calcola volatilità simulata";
+
+volatilityButton.addEventListener("click", () => {
+  const values = [100];
+  for (let i = 1; i < 30; i++) {
+    values.push(
+      Math.max(1, values[i - 1] + (Math.random() - 0.5) * 8)
+    );
+  }
+
+  const returns = [];
+  for (let i = 1; i < values.length; i++) {
+    returns.push((values[i] / values[i - 1] - 1) * 100);
+  }
+
+  const mean =
+    returns.reduce((sum, value) => sum + value, 0) / returns.length;
+
+  const variance =
+    returns.reduce((sum, value) => sum + (value - mean) ** 2, 0) /
+    returns.length;
+
+  const volatility = Math.sqrt(variance);
+
+  volatilityResult.textContent =
+    "Oscillazione media assoluta: " +
+    (
+      returns.reduce((sum, value) => sum + Math.abs(value), 0) /
+      returns.length
+    ).toFixed(2) +
+    "% | Deviazione standard dei rendimenti: " +
+    volatility.toFixed(2) +
+    "%. Valori riferiti a un esempio simulato.";
+});
+
+volatilityPanel.append(
+  volatilityTitle,
+  volatilityDescription,
+  volatilityButton,
+  volatilityResult
+);
+
+document.body.appendChild(volatilityPanel);
+
 const labButton = document.createElement("button");
 labButton.textContent = "Avvia analisi didattica";
 
