@@ -1124,7 +1124,7 @@ historyButton.addEventListener("click", async () => {
     const candleResponse = await fetch(
       base + "/networks/solana/pools/" +
       encodeURIComponent(address) +
-      "/ohlcv/hour?aggregate=1&limit=500&currency=usd",
+      "/ohlcv/hour?aggregate=1&limit=1000&currency=usd",
       { headers: { accept: "application/json" } }
     );
 
