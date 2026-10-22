@@ -427,6 +427,43 @@ chartButton.textContent = "Genera scenario simulato";
 const chartNote = document.createElement("p");
 chartNote.className = "result";
   
+const statsPanel = document.createElement("div");
+statsPanel.className = "result";
+statsPanel.style.marginTop = "12px";
+statsPanel.style.padding = "12px";
+statsPanel.style.borderRadius = "10px";
+statsPanel.style.background = "#252b3d";
+statsPanel.textContent = "Genera uno scenario per calcolare le statistiche.";
+
+function updateChartStats(values) {
+  const first = values[0];
+  const last = values[values.length - 1];
+  const highest = Math.max(...values);
+  const lowest = Math.min(...values);
+
+  const totalChange = ((last / first) - 1) * 100;
+
+  let peak = values[0];
+  let maxDrawdown = 0;
+
+  values.forEach(value => {
+    peak = Math.max(peak, value);
+    const drawdown = ((peak - value) / peak) * 100;
+    maxDrawdown = Math.max(maxDrawdown, drawdown);
+  });
+
+  statsPanel.textContent =
+    "Valore iniziale: " + first.toFixed(2) +
+    " | Valore finale: " + last.toFixed(2) +
+    " | Variazione totale: " +
+    (totalChange >= 0 ? "+" : "") + totalChange.toFixed(2) +
+    "% | Massimo: " + highest.toFixed(2) +
+    " | Minimo: " + lowest.toFixed(2) +
+    " | Massima flessione: " + maxDrawdown.toFixed(2) +
+    "%. Dati simulati, non previsioni.";
+}
+
+  
 let demoValues = [100];
 function drawDemoChart() {
   const ctx = chartCanvas.getContext("2d");
@@ -481,7 +518,7 @@ const values = demoValues;
   chartNote.textContent =
     "Scenario generato: valore iniziale 100, valore finale " +
     values[values.length - 1].toFixed(2) +
-    ". Dati fittizi.";
+    ". Dati fittizi.";updateChartStats(values);
 }
 
 chartButton.addEventListener("click", drawDemoChart);
@@ -491,7 +528,8 @@ chartPanel.append(
   chartDescription,
   chartCanvas,
   chartButton,
-  chartNote
+  chartNote,
+  statsPanel
 );
 
 document.querySelector(".wrap").appendChild(chartPanel);
