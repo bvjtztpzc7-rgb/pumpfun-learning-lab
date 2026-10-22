@@ -436,10 +436,13 @@ chartNote.className = "result";
   
 const statsPanel = document.createElement("div");
 statsPanel.className = "result";
-statsPanel.style.marginTop = "12px";
-statsPanel.style.padding = "12px";
-statsPanel.style.borderRadius = "10px";
-statsPanel.style.background = "#252b3d";
+statsPanel.style.marginTop = "14px";
+statsPanel.style.padding = "14px";
+statsPanel.style.borderRadius = "12px";
+statsPanel.style.background = "#171c2a";
+statsPanel.style.border = "1px solid #343b50";
+statsPanel.style.lineHeight = "1.8";
+statsPanel.style.overflowWrap = "anywhere";
 statsPanel.textContent = "Genera uno scenario per calcolare le statistiche.";
 
 function updateChartStats(values) {
