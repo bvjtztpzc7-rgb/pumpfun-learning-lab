@@ -494,10 +494,10 @@ const values = demoValues;
   const max = Math.max(...values) + 3;
 
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#111827";
   ctx.fillRect(0, 0, width, height);
 
-  ctx.strokeStyle = "#dddddd";
+  ctx.strokeStyle = "#343b50";
   ctx.lineWidth = 1;
   for (let i = 0; i < 5; i++) {
     const y = padding + i * (height - 2 * padding) / 4;
@@ -507,7 +507,7 @@ const values = demoValues;
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "#2563eb";
+  ctx.strokeStyle = "#8b5cf6";
   ctx.lineWidth = 3;
   ctx.beginPath();
 
