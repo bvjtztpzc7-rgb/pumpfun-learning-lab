@@ -1045,8 +1045,15 @@ analysisButton.addEventListener("click", async () => {
       "\n\nTP/SL: non calcolati. Senza candele storiche, " +
       "volatilità misurata e una strategia testata, i livelli sarebbero arbitrari." +
       "\n\nOrigine Pump.fun: non verificata da questa API.";
-  } catch (error) {
-    analysisOutput.textContent =
+} catch (error) {
+  historyOutput.textContent =
+    "Errore analisi: " +
+    (error.message || String(error)) +
+    "\n\nControlla la connessione o riprova tra poco.";
+} finally {
+  historyButton.disabled = false;
+}
+
       "Analisi non riuscita. Controlla la connessione e riprova.";
   } finally {
     analysisButton.disabled = false;
