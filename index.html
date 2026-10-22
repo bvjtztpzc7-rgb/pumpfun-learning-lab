@@ -58,17 +58,35 @@
     }
     .metric:last-child { border: 0; }
     .metric span { color: var(--muted); }
-    button {
-      width: 100%;
-      border: 0;
-      border-radius: 12px;
-      padding: 14px;
-      margin-top: 10px;
-      background: var(--accent);
-      color: white;
-      font-weight: 700;
-      font-size: 16px;
-    }
+    
+button {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.4;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.2s ease, transform 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.985);
+  filter: brightness(0.92);
+}
+
+button:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 3px;
+}
+
     input {
       width: 100%;
       margin: 8px 0 12px;
@@ -128,20 +146,42 @@ canvas {
 }
 
 
-    @media (max-width: 380px) {
-      body {
-        padding: 12px 10px 25px;
-      }
+ 
+@media (max-width: 380px) {
+  body {
+    padding: 12px 10px 25px;
+  }
 
-      .top, .panel {
-        padding: 14px;
-        border-radius: 14px;
-      }
+  .wrap {
+    width: 100%;
+    min-width: 0;
+  }
 
-      h1 {
-        font-size: 25px;
-      }
-    }
+  .top, .panel {
+    padding: 14px;
+    border-radius: 14px;
+    min-width: 0;
+  }
+
+  h1 {
+    font-size: 25px;
+    overflow-wrap: anywhere;
+  }
+
+  h2 {
+    font-size: 19px;
+  }
+
+  button {
+    font-size: 15px;
+    padding: 13px 10px;
+  }
+
+  canvas {
+    max-width: 100%;
+  }
+}
+
 
     /* Layout uniforme dei pannelli dinamici */
     #marketResults > .panel {
@@ -615,6 +655,13 @@ volatilityDescription.textContent =
 
 const volatilityResult = document.createElement("div");
 volatilityResult.className = "result";
+  volatilityResult.style.marginTop = "12px";
+volatilityResult.style.padding = "14px";
+volatilityResult.style.borderRadius = "12px";
+volatilityResult.style.background = "#171c2a";
+volatilityResult.style.border = "1px solid #343b50";
+volatilityResult.style.lineHeight = "1.8";
+volatilityResult.style.overflowWrap = "anywhere";
 
 const volatilityButton = document.createElement("button");
 volatilityButton.textContent = "Calcola volatilità simulata";
