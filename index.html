@@ -102,6 +102,29 @@
     <p class="small">Valori inventati per esercitazione: non sono quotazioni reali.</p>
   </section>
 
+  
+<section class="panel">
+  <h2>Esplora dati di mercato</h2>
+  <p>
+    Inserisci l'indirizzo pubblico di un token Solana per consultare
+    le coppie disponibili e le relative metriche.
+  </p>
+
+  <label for="tokenAddress">Indirizzo del token</label>
+  <input
+    id="tokenAddress"
+    type="text"
+    placeholder="Incolla l'indirizzo del token"
+    autocomplete="off"
+    autocapitalize="off"
+    spellcheck="false"
+  >
+
+  <button id="loadMarket">Carica dati pubblici</button>
+  <div id="marketStatus" class="result" aria-live="polite"></div>
+  <div id="marketResults"></div>
+</section>
+
   <section class="panel">
     <h2>Simulatore di rischio</h2>
     <p>Inserisci valori ipotetici per osservare come una variazione di prezzo influisce su un importo fittizio.</p>
