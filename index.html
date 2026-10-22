@@ -494,7 +494,7 @@ chartPanel.append(
   chartNote
 );
 
-document.body.appendChild(chartPanel);
+document.querySelector(".wrap").appendChild(chartPanel);
 drawDemoChart();
 
 const volatilityPanel = document.createElement("section");
@@ -548,7 +548,7 @@ volatilityPanel.append(
   volatilityResult
 );
 
-document.body.appendChild(volatilityPanel);
+document.querySelector(".wrap").appendChild(volatilityPanel);
 
 const labButton = document.createElement("button");
 labButton.textContent = "Avvia analisi didattica";
@@ -620,7 +620,7 @@ labPanel.append(
   labResult
 );
 
-document.body.appendChild(labPanel);
+document.querySelector(".wrap").appendChild(labPanel);
 
   calculate();
 </script>
