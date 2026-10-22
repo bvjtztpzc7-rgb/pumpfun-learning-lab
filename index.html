@@ -346,7 +346,8 @@ chartButton.textContent = "Genera scenario simulato";
 
 const chartNote = document.createElement("p");
 chartNote.className = "result";
-
+  
+let demoValues = [100];
 function drawDemoChart() {
   const ctx = chartCanvas.getContext("2d");
   if (!ctx) {
@@ -354,12 +355,13 @@ function drawDemoChart() {
     return;
   }
 
-  const values = [100];
-  for (let i = 1; i < 30; i++) {
-    const previous = values[i - 1];
-    const change = (Math.random() - 0.5) * 8;
-    values.push(Math.max(1, previous + change));
-  }
+  demoValues = [100];
+for (let i = 1; i < 30; i++) {
+  const previous = demoValues[i - 1];
+  const change = (Math.random() - 0.5) * 8;
+  demoValues.push(Math.max(1, previous + change));
+}
+const values = demoValues;
 
   const width = chartCanvas.width;
   const height = chartCanvas.height;
@@ -432,12 +434,7 @@ const volatilityButton = document.createElement("button");
 volatilityButton.textContent = "Calcola volatilità simulata";
 
 volatilityButton.addEventListener("click", () => {
-  const values = [100];
-  for (let i = 1; i < 30; i++) {
-    values.push(
-      Math.max(1, values[i - 1] + (Math.random() - 0.5) * 8)
-    );
-  }
+  const values = demoValues;
 
   const returns = [];
   for (let i = 1; i < values.length; i++) {
