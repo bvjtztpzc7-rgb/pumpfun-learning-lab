@@ -462,16 +462,74 @@ function updateChartStats(values) {
     maxDrawdown = Math.max(maxDrawdown, drawdown);
   });
 
-  statsPanel.textContent =
-    "Valore iniziale: " + first.toFixed(2) +
-    " | Valore finale: " + last.toFixed(2) +
-    " | Variazione totale: " +
-    (totalChange >= 0 ? "+" : "") + totalChange.toFixed(2) +
-    "% | Massimo: " + highest.toFixed(2) +
-    " | Minimo: " + lowest.toFixed(2) +
-    " | Massima flessione: " + maxDrawdown.toFixed(2) +
-    "%. Dati simulati, non previsioni.";
+  
+statsPanel.innerHTML = "";
+
+const stats = [
+  ["VALORE INIZIALE", first.toFixed(2)],
+  ["VALORE FINALE", last.toFixed(2)],
+  [
+    "VARIAZIONE TOTALE",
+    (totalChange >= 0 ? "+" : "") +
+      totalChange.toFixed(2) + "%"
+  ],
+  ["MASSIMO", highest.toFixed(2)],
+  ["MINIMO", lowest.toFixed(2)],
+  ["MASSIMA FLESSIONE", maxDrawdown.toFixed(2) + "%"]
+];
+
+const statsGrid = document.createElement("div");
+statsGrid.style.display = "grid";
+statsGrid.style.gridTemplateColumns =
+  "repeat(2, minmax(0, 1fr))";
+statsGrid.style.gap = "10px";
+
+stats.forEach(([label, value]) => {
+  const card = document.createElement("div");
+  card.style.background = "#252b3d";
+  card.style.border = "1px solid #343b50";
+  card.style.borderRadius = "10px";
+  card.style.padding = "12px";
+  card.style.minWidth = "0";
+
+  const title = document.createElement("div");
+  title.textContent = label;
+  title.style.fontSize = "11px";
+  title.style.color = "#aab3c5";
+  title.style.marginBottom = "6px";
+
+  const number = document.createElement("div");
+  number.textContent = value;
+  number.style.fontSize = "18px";
+  number.style.fontWeight = "700";
+  number.style.color = "#ffffff";
+  number.style.overflowWrap = "anywhere";
+
+  if (label === "VARIAZIONE TOTALE") {
+    number.style.color =
+      totalChange >= 0 ? "#34d399" : "#fb7185";
+  }
+
+  if (label === "MASSIMA FLESSIONE") {
+    number.style.color = "#fbbf24";
+  }
+
+  card.append(title, number);
+  statsGrid.appendChild(card);
+});
+
+statsPanel.appendChild(statsGrid);
+
+const disclaimer = document.createElement("p");
+disclaimer.textContent =
+  "Dati simulati, non previsioni del mercato.";
+disclaimer.style.fontSize = "12px";
+disclaimer.style.color = "#aab3c5";
+disclaimer.style.marginBottom = "0";
+
+statsPanel.appendChild(disclaimer);
 }
+
 
   
 let demoValues = [100];
