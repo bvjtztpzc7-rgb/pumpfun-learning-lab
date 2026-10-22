@@ -937,6 +937,131 @@ scannerPanel.append(
 );
 
 document.querySelector(".wrap").appendChild(scannerPanel);
+  
+/* ANALISI TECNICA SIMULATA — solo dati pubblici */
+const analysisPanel = document.createElement("section");
+analysisPanel.className = "panel";
+
+const analysisTitle = document.createElement("h2");
+analysisTitle.textContent = "Analisi tecnica simulata";
+
+const analysisText = document.createElement("p");
+analysisText.textContent =
+  "Inserisci l'indirizzo del token per esaminare i dati disponibili. " +
+  "I livelli sono didattici e non costituiscono una previsione.";
+
+const analysisButton = document.createElement("button");
+analysisButton.textContent = "Analizza token";
+
+const analysisOutput = document.createElement("div");
+analysisOutput.className = "result";
+analysisOutput.style.whiteSpace = "pre-wrap";
+analysisOutput.style.overflowWrap = "anywhere";
+analysisOutput.textContent = "In attesa di un indirizzo token.";
+
+analysisButton.addEventListener("click", async () => {
+  const query = scannerQuery.value.trim();
+
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(query)) {
+    analysisOutput.textContent =
+      "Inserisci un indirizzo token Solana valido nel campo di ricerca dello scanner.";
+    return;
+  }
+
+  analysisButton.disabled = true;
+  analysisOutput.textContent = "Analisi dei dati disponibili...";
+
+  try {
+    const response = await fetch(
+      "https://api.dexscreener.com/latest/dex/tokens/" +
+      encodeURIComponent(query)
+    );
+
+    if (!response.ok) throw new Error("Dati non disponibili");
+
+    const data = await response.json();
+    const pairs = (data.pairs || [])
+      .filter(p =>
+        p.chainId === "solana" &&
+        p.baseToken &&
+        Number.isFinite(Number(p.priceUsd)) &&
+        Number(p.priceUsd) > 0
+      )
+      .sort((a, b) =>
+        Number(b.liquidity?.usd || 0) -
+        Number(a.liquidity?.usd || 0)
+      );
+
+    if (!pairs.length) {
+      analysisOutput.textContent =
+        "Nessuna coppia Solana con prezzo valido trovata.";
+      return;
+    }
+
+    const p = pairs[0];
+    const price = Number(p.priceUsd);
+    const change = Number(p.priceChange?.h24);
+    const volume = Number(p.volume?.h24);
+    const liquidity = Number(p.liquidity?.usd);
+    const validChange = Number.isFinite(change);
+    const validVolume = Number.isFinite(volume);
+    const validLiquidity = Number.isFinite(liquidity);
+
+    let status = "WAIT — dati insufficienti per una valutazione direzionale";
+    let reason =
+      "Servono candele storiche e indicatori tecnici per valutare una strategia.";
+
+    if (
+      validChange && validVolume && validLiquidity &&
+      liquidity >= 25000 && volume >= 10000
+    ) {
+      if (change >= 5) {
+        status = "OSSERVAZIONE: momentum positivo";
+        reason =
+          "Variazione positiva nelle 24 ore; non conferma un ingresso BUY.";
+      } else if (change <= -5) {
+        status = "OSSERVAZIONE: momentum negativo";
+        reason =
+          "Variazione negativa nelle 24 ore; non conferma un ingresso SELL.";
+      } else {
+        status = "WAIT — variazione 24h contenuta";
+        reason =
+          "La variazione da sola non indica una direzione affidabile.";
+      }
+    }
+
+    analysisOutput.textContent =
+      status + "\n\n" +
+      "Token: " + (p.baseToken.symbol || "n/d") + "\n" +
+      "DEX: " + (p.dexId || "n/d") + "\n" +
+      "Prezzo di riferimento: $" + price.toPrecision(8) + "\n" +
+      "Variazione 24h: " +
+      (validChange ? change.toFixed(2) + "%" : "n/d") + "\n" +
+      "Volume 24h: $" +
+      (validVolume ? volume.toLocaleString("it-IT") : "n/d") + "\n" +
+      "Liquidità: $" +
+      (validLiquidity ? liquidity.toLocaleString("it-IT") : "n/d") +
+      "\n\nValutazione: " + reason +
+      "\n\nTP/SL: non calcolati. Senza candele storiche, " +
+      "volatilità misurata e una strategia testata, i livelli sarebbero arbitrari." +
+      "\n\nOrigine Pump.fun: non verificata da questa API.";
+  } catch (error) {
+    analysisOutput.textContent =
+      "Analisi non riuscita. Controlla la connessione e riprova.";
+  } finally {
+    analysisButton.disabled = false;
+  }
+});
+
+analysisPanel.append(
+  analysisTitle,
+  analysisText,
+  analysisButton,
+  analysisOutput
+);
+
+document.querySelector(".wrap").appendChild(analysisPanel);
+
 
 
 
