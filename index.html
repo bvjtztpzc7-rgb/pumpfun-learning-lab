@@ -703,23 +703,36 @@ volatilityPanel.append(
 
 document.querySelector(".wrap").appendChild(volatilityPanel);
 
+
 const scannerPanel = document.createElement("section");
 scannerPanel.className = "panel";
 
 const scannerTitle = document.createElement("h2");
-scannerTitle.textContent = "Scanner di mercato";
+scannerTitle.textContent = "Scanner token Solana";
 
 const scannerDescription = document.createElement("p");
 scannerDescription.textContent =
-  "Confronta i dati pubblici dei token. Le metriche descrivono il mercato, non prevedono il prezzo.";
+  "Inserisci l'indirizzo di un token Solana per consultare i dati pubblici disponibili su DexScreener. I dati non sono previsioni.";
+
+const scannerAddress = document.createElement("input");
+scannerAddress.type = "text";
+scannerAddress.placeholder = "Incolla l'indirizzo del token Solana";
+scannerAddress.setAttribute("aria-label", "Indirizzo del token Solana");
+scannerAddress.autocomplete = "off";
+scannerAddress.spellcheck = false;
+scannerAddress.style.width = "100%";
+scannerAddress.style.boxSizing = "border-box";
+scannerAddress.style.margin = "10px 0";
+scannerAddress.style.padding = "12px";
+scannerAddress.style.borderRadius = "10px";
 
 const scannerButton = document.createElement("button");
-scannerButton.textContent = "Carica dati di mercato";
+scannerButton.textContent = "Cerca token";
 
 const scannerStatus = document.createElement("p");
 scannerStatus.className = "result";
 scannerStatus.textContent =
-  "Premi il pulsante per cercare coppie di token disponibili.";
+  "Inserisci un indirizzo e premi Cerca token.";
 
 const scannerResults = document.createElement("div");
 scannerResults.className = "result";
@@ -731,38 +744,52 @@ scannerResults.style.border = "1px solid #343b50";
 scannerResults.style.overflowWrap = "anywhere";
 
 scannerButton.addEventListener("click", async () => {
+  const address = scannerAddress.value.trim();
+
+  if (!address) {
+    scannerStatus.textContent =
+      "Inserisci prima l'indirizzo del token.";
+    return;
+  }
+
   scannerButton.disabled = true;
-  scannerStatus.textContent = "Caricamento dei dati pubblici...";
+  scannerStatus.textContent = "Ricerca delle coppie disponibili...";
   scannerResults.replaceChildren();
 
   try {
     const response = await fetch(
-      "https://api.dexscreener.com/latest/dex/search/?q=SOL"
+      "https://api.dexscreener.com/latest/dex/tokens/" +
+      encodeURIComponent(address)
     );
 
     if (!response.ok) {
-      throw new Error("Servizio temporaneamente non disponibile.");
+      throw new Error("Servizio non disponibile.");
     }
 
     const data = await response.json();
+
     const pairs = (data.pairs || [])
       .filter(pair =>
         pair.chainId === "solana" &&
+        pair.baseToken &&
         pair.priceUsd &&
-        pair.liquidity &&
-        Number(pair.liquidity.usd) > 0
+        Number.isFinite(Number(pair.priceUsd)) &&
+        Number(pair.liquidity?.usd) > 0
+      )
+      .sort((a, b) =>
+        Number(b.liquidity.usd) - Number(a.liquidity.usd)
       )
       .slice(0, 10);
 
     if (pairs.length === 0) {
       scannerStatus.textContent =
-        "Nessuna coppia con dati sufficienti. Riprova più tardi.";
+        "Nessuna coppia Solana con dati sufficienti trovata. Controlla l'indirizzo o riprova più tardi.";
       return;
     }
 
     scannerStatus.textContent =
-      "Coppie trovate: " + pairs.length +
-      ". Dati indicativi, soggetti a ritardi e variazioni.";
+      "Trovate " + pairs.length +
+      " coppie. Ordinate per liquidità decrescente; non è una classifica di acquisto.";
 
     pairs.forEach(pair => {
       const card = document.createElement("div");
@@ -771,29 +798,33 @@ scannerButton.addEventListener("click", async () => {
 
       const name = document.createElement("h3");
       name.textContent =
-        (pair.baseToken?.symbol || "Token") +
+        (pair.baseToken.symbol || "Token") +
         " / " + (pair.quoteToken?.symbol || "SOL");
 
       const details = document.createElement("p");
+
       const price = Number(pair.priceUsd);
       const change = Number(pair.priceChange?.h24);
       const volume = Number(pair.volume?.h24);
       const liquidity = Number(pair.liquidity?.usd);
 
       details.textContent =
-        "Prezzo: $" + price.toPrecision(5) +
+        "DEX: " + (pair.dexId || "n/d") +
+        " | Prezzo: $" + price.toPrecision(6) +
         " | Variazione 24h: " +
         (Number.isFinite(change) ? change.toFixed(2) + "%" : "n/d") +
         " | Volume 24h: $" +
-        (Number.isFinite(volume) ? volume.toLocaleString("it-IT") : "n/d") +
+        (Number.isFinite(volume)
+          ? volume.toLocaleString("it-IT")
+          : "n/d") +
         " | Liquidità: $" +
-        (Number.isFinite(liquidity) ? liquidity.toLocaleString("it-IT") : "n/d");
+        liquidity.toLocaleString("it-IT");
 
       const link = document.createElement("a");
       link.href = pair.url;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.textContent = "Apri dati della coppia";
+      link.textContent = "Apri coppia su DexScreener";
       link.style.color = "#a78bfa";
 
       card.append(name, details, link);
@@ -801,7 +832,7 @@ scannerButton.addEventListener("click", async () => {
     });
   } catch (error) {
     scannerStatus.textContent =
-      "Non riesco a caricare i dati. Controlla la connessione e riprova.";
+      "Errore nel caricamento. Controlla la connessione e riprova.";
   } finally {
     scannerButton.disabled = false;
   }
@@ -810,12 +841,14 @@ scannerButton.addEventListener("click", async () => {
 scannerPanel.append(
   scannerTitle,
   scannerDescription,
+  scannerAddress,
   scannerButton,
   scannerStatus,
   scannerResults
 );
 
 document.querySelector(".wrap").appendChild(scannerPanel);
+
 
 const labButton = document.createElement("button");
 labButton.textContent = "Avvia analisi didattica";
