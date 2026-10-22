@@ -4,98 +4,194 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pumpfun Learning Lab</title>
+  <title>Market Lab</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10131c;
+      --panel: #1b2030;
+      --text: #f4f6ff;
+      --muted: #aab2c8;
+      --accent: #8b7cff;
+      --border: #30374b;
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 20px;
-      background: var(--tg-theme-bg-color, #10131c);
-      color: var(--tg-theme-text-color, #ffffff);
-      font-family: -apple-system, sans-serif;
+      padding: 20px 15px 35px;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    .card {
-      padding: 16px;
-      margin: 14px 0;
-      border-radius: 16px;
-      background: var(--tg-theme-secondary-bg-color, #202532);
+    .wrap { max-width: 560px; margin: auto; }
+    .top, .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 14px;
     }
-    button {
-      width: 100%;
-      padding: 15px;
-      border: 0;
-      border-radius: 12px;
-      background: var(--tg-theme-button-color, #3686f7);
-      color: var(--tg-theme-button-text-color, white);
-      font-size: 16px;
-      font-weight: bold;
+    .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
     }
-    .muted { opacity: .7; font-size: 13px; }
-    .row {
+    h1 { margin: 8px 0; font-size: 28px; }
+    h2 { margin: 0 0 14px; font-size: 18px; }
+    p { color: var(--muted); line-height: 1.5; }
+    .tag {
+      display: inline-block;
+      background: #302a52;
+      color: #d8d1ff;
+      border-radius: 20px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .metric {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid #7774;
+      border-bottom: 1px solid var(--border);
     }
+    .metric:last-child { border: 0; }
+    .metric span { color: var(--muted); }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 10px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    input {
+      width: 100%;
+      margin: 8px 0 12px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+    }
+    .result { line-height: 1.8; }
+    .small { font-size: 12px; }
+    .history { white-space: pre-line; line-height: 1.7; }
   </style>
 </head>
 <body>
-  <h2>🔬 Pumpfun Learning Lab</h2>
-  <p class="muted">
-    Laboratorio educativo · Nessun ordine reale
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">MARKET LAB</div>
+    <h1>Il tuo laboratorio</h1>
+    <p>Impara a leggere i dati di mercato e a simulare scenari senza usare denaro reale.</p>
+    <span class="tag">MODALITÀ DEMO</span>
+  </header>
+
+  <section class="panel">
+    <h2>Metriche dimostrative</h2>
+    <div class="metric"><span>Prezzo simulato</span><strong>€ 1,024</strong></div>
+    <div class="metric"><span>Volume simulato 24h</span><strong>€ 82.400</strong></div>
+    <div class="metric"><span>Liquidità simulata</span><strong>€ 21.600</strong></div>
+    <div class="metric"><span>Variazione simulata</span><strong>+4,2%</strong></div>
+    <p class="small">Valori inventati per esercitazione: non sono quotazioni reali.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Simulatore di rischio</h2>
+    <p>Inserisci valori ipotetici per osservare come una variazione di prezzo influisce su un importo fittizio.</p>
+
+    <label for="amount">Importo simulato (€)</label>
+    <input id="amount" type="number" min="1" max="1000000"
+      value="100" inputmode="decimal">
+
+    <label for="change">Variazione ipotetica (%)</label>
+    <input id="change" type="number" min="-100" max="1000"
+      value="-20" inputmode="decimal">
+
+    <button id="calculate">Esegui simulazione</button>
+    <div id="result" class="result" aria-live="polite"></div>
+    <button id="save">Salva nel registro locale</button>
+  </section>
+
+  <section class="panel">
+    <h2>Registro delle simulazioni</h2>
+    <div id="history" class="history">Nessuna simulazione salvata.</div>
+    <button id="clear">Cancella registro</button>
+  </section>
+
+  <p class="small">
+    Questo laboratorio è didattico. I risultati simulati non prevedono
+    i prezzi futuri e non costituiscono raccomandazioni finanziarie.
   </p>
+</div>
 
-  <div class="card">
-    <h3>Analisi di mercato</h3>
-    <p id="status">Pronto per iniziare.</p>
-    <button id="analyze">Avvia analisi didattica</button>
-  </div>
+<script>
+  const tg = window.Telegram?.WebApp;
+  tg?.ready();
+  tg?.expand();
 
-  <div class="card">
-    <h3>Monete osservate</h3>
-    <div id="results">
-      Nessun dato analizzato.
-    </div>
-  </div>
+  let lastResult = null;
+  let history = [];
 
-  <div class="card">
-    <h3>Simulazione dei rischi</h3>
-    <p>
-      In una fase successiva potrai studiare la volatilità,
-      le variazioni di prezzo e gli effetti ipotetici di
-      costi e slippage.
-    </p>
-    <p class="muted">
-      I dati dimostrativi non rappresentano prezzi reali.
-    </p>
-  </div>
+  const amount = document.getElementById("amount");
+  const change = document.getElementById("change");
+  const result = document.getElementById("result");
+  const historyEl = document.getElementById("history");
 
-  <script>
-    const app = window.Telegram?.WebApp;
-    app?.ready();
-    app?.expand();
+  function calculate() {
+    const a = Number(amount.value);
+    const c = Number(change.value);
 
-    document.getElementById("analyze").onclick = () => {
-      document.getElementById("status").textContent =
-        "Test dell'interfaccia completato.";
+    if (!Number.isFinite(a) || !Number.isFinite(c) ||
+        a <= 0 || a > 1000000 || c < -100 || c > 1000) {
+      result.textContent = "Inserisci valori validi nell'intervallo indicato.";
+      lastResult = null;
+      return;
+    }
 
-      document.getElementById("results").innerHTML = `
-        <div class="row">
-          <span>MONETA DEMO A</span>
-          <span>Dati illustrativi</span>
-        </div>
-        <div class="row">
-          <span>MONETA DEMO B</span>
-          <span>Dati illustrativi</span>
-        </div>
-        <div class="row">
-          <span>MONETA DEMO C</span>
-          <span>Dati illustrativi</span>
-        </div>
-      `;
-    };
-  </script>
+    const delta = a * c / 100;
+    const finalValue = a + delta;
+
+    lastResult = { a, c, delta, finalValue };
+
+    result.textContent =
+      `Variazione ipotetica: ${delta >= 0 ? "+" : ""}` +
+      `${delta.toFixed(2)} € — Valore finale: ` +
+      `${finalValue.toFixed(2)} €`;
+  }
+
+  function renderHistory() {
+    historyEl.textContent = history.length
+      ? history.map((h, i) =>
+          `${i + 1}. Importo ${h.a.toFixed(2)} € | ` +
+          `variazione ${h.c}% | risultato ${h.finalValue.toFixed(2)} €`
+        ).join("\n")
+      : "Nessuna simulazione salvata.";
+  }
+
+  document.getElementById("calculate").addEventListener("click", calculate);
+
+  document.getElementById("save").addEventListener("click", () => {
+    if (!lastResult) calculate();
+    if (!lastResult) return;
+
+    history.unshift(lastResult);
+    history = history.slice(0, 20);
+    renderHistory();
+  });
+
+  document.getElementById("clear").addEventListener("click", () => {
+    history = [];
+    renderHistory();
+  });
+
+  calculate();
+</script>
 </body>
 </html>
