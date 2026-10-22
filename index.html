@@ -318,6 +318,79 @@
     }
   });
 
+  
+const labButton = document.createElement("button");
+labButton.textContent = "Avvia analisi didattica";
+
+const labPanel = document.createElement("section");
+labPanel.className = "panel";
+
+const labTitle = document.createElement("h2");
+labTitle.textContent = "Laboratorio di volatilità";
+
+const labDescription = document.createElement("p");
+labDescription.textContent =
+  "Simula scenari ipotetici per comprendere come le variazioni di prezzo influenzano un valore iniziale.";
+
+const labAmount = document.createElement("input");
+labAmount.type = "number";
+labAmount.min = "1";
+labAmount.step = "1";
+labAmount.value = "100";
+labAmount.setAttribute("aria-label", "Valore iniziale ipotetico");
+
+const labChange = document.createElement("input");
+labChange.type = "number";
+labChange.min = "-100";
+labChange.max = "100";
+labChange.step = "0.5";
+labChange.value = "5";
+labChange.setAttribute("aria-label", "Variazione percentuale ipotetica");
+
+const labResult = document.createElement("p");
+labResult.className = "result";
+labResult.textContent = "Imposta i valori e avvia la simulazione.";
+
+labButton.addEventListener("click", () => {
+  const amount = Number(labAmount.value);
+  const change = Number(labChange.value);
+
+  if (
+    !Number.isFinite(amount) ||
+    !Number.isFinite(change) ||
+    amount <= 0 ||
+    change < -100 ||
+    change > 100
+  ) {
+    labResult.textContent =
+      "Inserisci un valore iniziale positivo e una variazione tra -100% e +100%.";
+    return;
+  }
+
+  const result = amount * (1 + change / 100);
+  const difference = result - amount;
+
+  labResult.textContent =
+    "Valore iniziale: " +
+    amount.toFixed(2) +
+    " | Valore simulato: " +
+    result.toFixed(2) +
+    " | Differenza: " +
+    difference.toFixed(2) +
+    ". Scenario ipotetico, non una previsione.";
+});
+
+labPanel.append(
+  labTitle,
+  labDescription,
+  labAmount,
+  labChange,
+  labButton,
+  labResult
+);
+
+document.body.appendChild(labPanel);
+
   calculate();
 </script>
 </body>
