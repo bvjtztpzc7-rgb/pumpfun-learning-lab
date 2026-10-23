@@ -1454,6 +1454,146 @@ labPanel.append(
 
 document.querySelector(".wrap").appendChild(labPanel);
 
+/* AI SIGNAL LAB — scenari esclusivamente illustrativi */
+const signalPanel = document.createElement("section");
+signalPanel.className = "panel";
+
+const signalTitle = document.createElement("h2");
+signalTitle.textContent = "AI Signal Lab";
+
+const signalIntro = document.createElement("p");
+signalIntro.textContent =
+  "Dimostrazione didattica: i valori seguenti sono inventati e non derivano da dati di mercato.";
+
+const signalWarning = document.createElement("p");
+signalWarning.textContent =
+  "SIMULAZIONE — BUY, SELL, TP e SL sono esempi di interfaccia, non indicazioni operative.";
+signalWarning.style.color = "#fbbf24";
+signalWarning.style.fontWeight = "700";
+
+const signalButtons = document.createElement("div");
+signalButtons.style.display = "grid";
+signalButtons.style.gridTemplateColumns =
+  "repeat(3, minmax(0, 1fr))";
+signalButtons.style.gap = "8px";
+
+const signalOutput = document.createElement("div");
+signalOutput.className = "result";
+signalOutput.style.marginTop = "14px";
+signalOutput.style.padding = "14px";
+signalOutput.style.borderRadius = "12px";
+signalOutput.style.background = "#111827";
+signalOutput.style.border = "1px solid #343b50";
+signalOutput.style.lineHeight = "1.8";
+signalOutput.style.overflowWrap = "anywhere";
+
+const signalScenarios = {
+  BUY: {
+    entry: "1,0000",
+    tp: "1,0500",
+    sl: "0,9700",
+    color: "#34d399",
+    description: "Scenario ipotetico rialzista"
+  },
+  SELL: {
+    entry: "1,0000",
+    tp: "0,9500",
+    sl: "1,0300",
+    color: "#fb7185",
+    description: "Scenario ipotetico ribassista"
+  },
+  WAIT: {
+    entry: "—",
+    tp: "—",
+    sl: "—",
+    color: "#fbbf24",
+    description: "Scenario incerto: nessun livello mostrato"
+  }
+};
+
+function showSignalScenario(type) {
+  const s = signalScenarios[type];
+
+  signalOutput.replaceChildren();
+
+  const heading = document.createElement("h3");
+  heading.textContent = type;
+  heading.style.color = s.color;
+  heading.style.fontSize = "24px";
+  heading.style.marginTop = "0";
+
+  const description = document.createElement("p");
+  description.textContent = s.description;
+
+  const rows = [
+    ["Prezzo d'ingresso ipotetico", s.entry],
+    ["TP illustrativo", s.tp],
+    ["SL illustrativo", s.sl]
+  ];
+
+  signalOutput.append(heading, description);
+
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.className = "metric";
+
+    const name = document.createElement("span");
+    name.textContent = label;
+
+    const number = document.createElement("strong");
+    number.textContent = value;
+    number.style.color = s.color;
+
+    row.append(name, number);
+    signalOutput.appendChild(row);
+  });
+
+  const note = document.createElement("p");
+  note.className = "small";
+  note.textContent =
+    "Valori fittizi: il pannello non analizza il token, " +
+    "non calcola probabilità e non genera previsioni.";
+
+  signalOutput.appendChild(note);
+
+  signalButtons.querySelectorAll("button").forEach(button => {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.scenario === type)
+    );
+  });
+}
+
+[
+  ["BUY", "#176b4b"],
+  ["SELL", "#8b3040"],
+  ["WAIT", "#705b24"]
+].forEach(([type, color]) => {
+  const button = document.createElement("button");
+  button.textContent = type;
+  button.dataset.scenario = type;
+  button.style.background = color;
+  button.style.marginTop = "0";
+  button.setAttribute("aria-pressed", "false");
+
+  button.addEventListener("click", () => {
+    showSignalScenario(type);
+  });
+
+  signalButtons.appendChild(button);
+});
+
+signalPanel.append(
+  signalTitle,
+  signalIntro,
+  signalWarning,
+  signalButtons,
+  signalOutput
+);
+
+document.querySelector(".wrap").appendChild(signalPanel);
+showSignalScenario("BUY");
+
   calculate();
 </script>
 </body>
