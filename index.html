@@ -771,6 +771,113 @@ scannerNotice.className = "result";
 scannerNotice.textContent =
   "I filtri descrivono caratteristiche osservate. Non dimostrano che un token sia sicuro o redditizio.";
 
+function valutaQualitaESegnale(pair) {
+  const prezzo = pair.priceUsd == null
+    ? NaN : Number(pair.priceUsd);
+
+  const variazione = pair.priceChange?.h24 == null
+    ? NaN : Number(pair.priceChange.h24);
+
+  const volume = pair.volume?.h24 == null
+    ? NaN : Number(pair.volume.h24);
+
+  const liquidita = pair.liquidity?.usd == null
+    ? NaN : Number(pair.liquidity.usd);
+
+  const creazione = Number(pair.pairCreatedAt);
+  const etaOre = Number.isFinite(creazione) && creazione > 0
+    ? (Date.now() - creazione) / 3600000
+    : NaN;
+
+  const avvisi = [];
+  const motivi = [];
+
+  if (!Number.isFinite(prezzo) || prezzo <= 0) {
+    avvisi.push("Prezzo non valido o mancante");
+  }
+
+  if (!Number.isFinite(variazione)) {
+    avvisi.push("Variazione 24h non disponibile");
+  }
+
+  if (!Number.isFinite(volume)) {
+    avvisi.push("Volume 24h non disponibile");
+  } else if (volume <= 0) {
+    avvisi.push("Volume nullo o non positivo");
+  }
+
+  if (!Number.isFinite(liquidita)) {
+    avvisi.push("Liquidità non verificabile");
+  } else if (liquidita < 10000) {
+    avvisi.push("Liquidità inferiore a 10.000 USD");
+  } else if (liquidita < 25000) {
+    avvisi.push("Liquidità relativamente contenuta");
+  }
+
+  if (!Number.isFinite(etaOre) || etaOre < 0) {
+    avvisi.push("Età della coppia non verificabile");
+  } else if (etaOre < 24) {
+    avvisi.push("Coppia con meno di 24 ore");
+  }
+
+  if (Number.isFinite(variazione) &&
+      Math.abs(variazione) >= 50) {
+    avvisi.push("Variazione estrema: possibile forte volatilità");
+  }
+
+  const datiInsufficienti =
+    !Number.isFinite(prezzo) || prezzo <= 0 ||
+    !Number.isFinite(variazione) ||
+    !Number.isFinite(volume) || volume <= 0 ||
+    !Number.isFinite(liquidita) || liquidita < 10000 ||
+    !Number.isFinite(etaOre) || etaOre < 24 ||
+    Math.abs(variazione) >= 50;
+
+  let segnale = "ATTENDI";
+
+  if (datiInsufficienti) {
+    motivi.push(
+      "Dati insufficienti o rischio elevato: nessun avviso direzionale."
+    );
+  } else if (variazione >= 5 &&
+             variazione <= 25 &&
+             volume >= 10000) {
+    segnale = "COMPRA";
+    motivi.push(
+      "Variazione positiva compresa tra +5% e +25%, con volume sufficiente."
+    );
+  } else if (variazione <= -5 && volume >= 10000) {
+    segnale = "VENDI";
+    motivi.push(
+      "Variazione negativa di almeno 5%, con volume sufficiente."
+    );
+  } else {
+    motivi.push(
+      "Le condizioni direzionali impostate non sono soddisfatte."
+    );
+  }
+
+  if (Number.isFinite(etaOre) && etaOre < 72) {
+    motivi.push(
+      "La coppia ha meno di 72 ore: prudenza aggiuntiva."
+    );
+  }
+
+  if (avvisi.length > 0) {
+    motivi.push("Controlli qualità: " + avvisi.join("; ") + ".");
+  } else {
+    motivi.push(
+      "Controlli di base superati; questo non garantisce la qualità completa dei dati."
+    );
+  }
+
+  motivi.push(
+    "Valutazione euristica su dati pubblici: non è una previsione affidabile né una garanzia di risultato."
+  );
+
+  return { segnale, avvisi, motivi };
+}
+
 scannerButton.addEventListener("click", async () => {
   const query = scannerQuery.value.trim();
 
@@ -893,7 +1000,40 @@ scannerButton.addEventListener("click", async () => {
       link.textContent = "Apri coppia su DexScreener";
       link.style.color = "#a78bfa";
 
-      card.append(title, details, caution, link);
+      
+const signalButton = document.createElement("button");
+signalButton.textContent = "Controlla dati e genera avviso";
+
+const signalOutput = document.createElement("div");
+signalOutput.className = "result";
+signalOutput.style.whiteSpace = "pre-wrap";
+signalOutput.style.overflowWrap = "anywhere";
+signalOutput.style.marginTop = "10px";
+signalOutput.textContent =
+  "Premi il pulsante per controllare la qualità dei dati e valutare il token.";
+
+signalButton.addEventListener("click", () => {
+  const valutazione = valutaQualitaESegnale(pair);
+
+  signalOutput.textContent =
+    "AVVISO: " + valutazione.segnale + "\n\n" +
+    "CONTROLLO QUALITÀ DATI\n" +
+    (valutazione.avvisi.length
+      ? valutazione.avvisi.map(x => "• " + x).join("\n")
+      : "• Nessun problema rilevato dai controlli impostati.") +
+    "\n\nMOTIVAZIONI\n" +
+    valutazione.motivi.map(x => "• " + x).join("\n");
+});
+
+card.append(
+  title,
+  details,
+  caution,
+  link,
+  signalButton,
+  signalOutput
+);
+
       scannerResults.appendChild(card);
     });
   } catch (error) {
