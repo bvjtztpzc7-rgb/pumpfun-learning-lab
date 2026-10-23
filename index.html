@@ -367,8 +367,10 @@ canvas {
       );
 
       if (!response.ok) {
-        throw new Error("Servizio temporaneamente non disponibile.");
-      }
+  throw new Error(
+    `DEX Screener: HTTP ${response.status}`
+  );
+}
 
       const pairs = await response.json();
 
@@ -436,10 +438,12 @@ canvas {
       });
 
       marketStatus.textContent =
-        "Dati ricevuti. Le metriche possono essere incomplete o ritardate.";
-    } catch (error) {
-      marketStatus.textContent =
-        "Impossibile caricare i dati. Controlla l'indirizzo e riprova.";
+        "Dati ricevuti. Le metriche possono essere incomplete o catch (error) {
+  console.error("Errore caricamento mercato:", error);
+
+  marketStatus.textContent =
+    "Errore: " + (error.message || "caricamento non riuscito");
+}
     } finally {
       loadMarket.disabled = false;
     }
