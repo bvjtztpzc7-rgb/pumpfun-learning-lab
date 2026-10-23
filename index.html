@@ -1356,7 +1356,414 @@ historyButton.addEventListener("click", async () => {
     historyButton.disabled = false;
   }
 });
+/* MARKET LAB — analizzatore didattico di token Solana */
+(function () {
+  const panel = document.createElement("section");
+  panel.className = "panel";
 
+  const title = document.createElement("h2");
+  title.textContent = "Market Lab — Token Scanner";
+
+  const description = document.createElement("p");
+  description.textContent =
+    "Analisi didattica di token Solana tramite dati pubblici. " +
+    "Gli esiti sono simulazioni, non previsioni affidabili.";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "Incolla l'indirizzo del token Solana";
+  input.autocomplete = "off";
+  input.spellcheck = false;
+  input.style.width = "100%";
+  input.style.boxSizing = "border-box";
+  input.style.marginBottom = "10px";
+
+  const button = document.createElement("button");
+  button.textContent = "Analizza token";
+
+  const output = document.createElement("div");
+  output.className = "result";
+  output.style.whiteSpace = "pre-wrap";
+  output.style.overflowWrap = "anywhere";
+  output.style.marginTop = "12px";
+  output.textContent = "Inserisci un indirizzo per iniziare.";
+
+  const historyTitle = document.createElement("h3");
+  historyTitle.textContent = "Storico delle analisi";
+
+  const historyOutput = document.createElement("div");
+  historyOutput.className = "result";
+  historyOutput.style.whiteSpace = "pre-wrap";
+  historyOutput.style.overflowWrap = "anywhere";
+
+  panel.append(
+    title,
+    description,
+    input,
+    button,
+    output,
+    historyTitle,
+    historyOutput
+  );
+
+  const wrapper = document.querySelector(".wrap");
+
+  if (!wrapper) {
+    console.error("Market Lab: contenitore .wrap non trovato.");
+    return;
+  }
+
+  wrapper.appendChild(panel);
+
+  const STORAGE_KEY = "marketLabEducationalHistoryV1";
+  const MIN_CANDLES = 60;
+  const MIN_LIQUIDITY_USD = 10000;
+
+  function getHistory() {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "[]"
+      );
+
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function renderHistory() {
+    const history = getHistory();
+
+    historyOutput.textContent = history.length
+      ? history.map((item, index) =>
+          `${index + 1}. ${item.time}\n` +
+          `Token: ${item.token}\n` +
+          `Esito didattico: ${item.signal}\n` +
+          `Prezzo osservato: $${item.price}\n`
+        ).join("\n")
+      : "Nessuna analisi salvata.";
+  }
+
+  function saveHistory(item) {
+    const history = getHistory();
+
+    history.unshift(item);
+
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(history.slice(0, 30))
+      );
+    } catch (error) {
+      console.warn("Impossibile salvare lo storico:", error);
+    }
+
+    renderHistory();
+  }
+
+  function calculateEMA(values, period) {
+    if (values.length < period) {
+      throw new Error("Candele insufficienti per calcolare l'EMA.");
+    }
+
+    const result = Array(values.length).fill(null);
+    let sum = 0;
+
+    for (let i = 0; i < period; i++) {
+      sum += values[i];
+    }
+
+    result[period - 1] = sum / period;
+
+    const alpha = 2 / (period + 1);
+
+    for (let i = period; i < values.length; i++) {
+      result[i] =
+        values[i] * alpha +
+        result[i - 1] * (1 - alpha);
+    }
+
+    return result;
+  }
+
+  function calculateRSI(values, period = 14) {
+    if (values.length <= period) {
+      throw new Error("Candele insufficienti per calcolare l'RSI.");
+    }
+
+    let gains = 0;
+    let losses = 0;
+
+    for (let i = 1; i <= period; i++) {
+      const change = values[i] - values[i - 1];
+
+      gains += Math.max(change, 0);
+      losses += Math.max(-change, 0);
+    }
+
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+
+    function getValue(gain, loss) {
+      if (loss === 0) {
+        return gain === 0 ? 50 : 100;
+      }
+
+      return 100 - 100 / (1 + gain / loss);
+    }
+
+    let currentRSI = getValue(avgGain, avgLoss);
+
+    for (let i = period + 1; i < values.length; i++) {
+      const change = values[i] - values[i - 1];
+
+      avgGain =
+        (avgGain * (period - 1) + Math.max(change, 0)) /
+        period;
+
+      avgLoss =
+        (avgLoss * (period - 1) + Math.max(-change, 0)) /
+        period;
+
+      currentRSI = getValue(avgGain, avgLoss);
+    }
+
+    return currentRSI;
+  }
+
+  function formatPrice(value) {
+    return Number(value).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 8
+    });
+  }
+
+  async function fetchJSON(url) {
+    const response = await fetch(url, {
+      headers: { accept: "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "Servizio dati: HTTP " + response.status
+      );
+    }
+
+    return response.json();
+  }
+
+  button.addEventListener("click", async () => {
+    const token = input.value.trim();
+
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(token)) {
+      output.textContent =
+        "Inserisci un indirizzo Solana valido. " +
+        "Controlla di non aver copiato spazi o caratteri mancanti.";
+      return;
+    }
+
+    button.disabled = true;
+    output.textContent = "Verifica dei dati pubblici in corso...";
+
+    try {
+      const dexURL =
+        "https://api.dexscreener.com/token-pairs/v1/solana/" +
+        encodeURIComponent(token);
+
+      const pairs = await fetchJSON(dexURL);
+
+      if (!Array.isArray(pairs) || pairs.length === 0) {
+        throw new Error(
+          "Nessuna coppia disponibile. Il token potrebbe essere " +
+          "troppo nuovo o non avere dati di mercato indicizzati."
+        );
+      }
+
+      const validPairs = pairs
+        .filter(pair =>
+          pair &&
+          pair.baseToken &&
+          pair.liquidity &&
+          Number.isFinite(Number(pair.liquidity.usd))
+        )
+        .sort((a, b) =>
+          Number(b.liquidity.usd) -
+          Number(a.liquidity.usd)
+        );
+
+      if (!validPairs.length) {
+        throw new Error(
+          "Non è stato possibile verificare la liquidità."
+        );
+      }
+
+      const pair = validPairs[0];
+      const liquidity = Number(pair.liquidity.usd);
+      const volume24h = Number(pair.volume?.h24 || 0);
+      const price = Number(pair.priceUsd);
+
+      if (!Number.isFinite(price) || price <= 0) {
+        throw new Error("Prezzo di mercato non valido.");
+      }
+
+      const geckoBase =
+        "https://api.geckoterminal.com/api/v2";
+
+      const poolData = await fetchJSON(
+        geckoBase +
+        "/networks/solana/tokens/" +
+        encodeURIComponent(token) +
+        "/pools?page=1"
+      );
+
+      const pools = (poolData.data || [])
+        .filter(pool =>
+          pool.attributes &&
+          pool.attributes.address
+        )
+        .sort((a, b) =>
+          Number(b.attributes.reserve_in_usd || 0) -
+          Number(a.attributes.reserve_in_usd || 0)
+        );
+
+      if (!pools.length) {
+        throw new Error(
+          "Non è disponibile una pool con storico utilizzabile."
+        );
+      }
+
+      const pool = pools[0];
+      const poolAddress = pool.attributes.address;
+
+      const candleData = await fetchJSON(
+        geckoBase +
+        "/networks/solana/pools/" +
+        encodeURIComponent(poolAddress) +
+        "/ohlcv/hour?aggregate=1&limit=100&currency=usd"
+      );
+
+      const rows =
+        candleData.data?.attributes?.ohlcv_list || [];
+
+      const candles = rows
+        .filter(row =>
+          Array.isArray(row) &&
+          row.length >= 6
+        )
+        .map(row => ({
+          time: Number(row[0]),
+          close: Number(row[4])
+        }))
+        .filter(candle =>
+          Number.isFinite(candle.time) &&
+          Number.isFinite(candle.close) &&
+          candle.close > 0
+        )
+        .sort((a, b) => a.time - b.time);
+
+      if (candles.length < MIN_CANDLES) {
+        throw new Error(
+          "DATI INSUFFICIENTI: disponibili " +
+          candles.length +
+          " candele valide; ne servono almeno " +
+          MIN_CANDLES + "."
+        );
+      }
+
+      const closes = candles.map(candle => candle.close);
+      const ema20 = calculateEMA(closes, 20);
+      const ema50 = calculateEMA(closes, 50);
+      const rsi14 = calculateRSI(closes, 14);
+
+      const last = closes.length - 1;
+      const latestPrice = closes[last];
+      const latestEMA20 = ema20[last];
+      const latestEMA50 = ema50[last];
+
+      const bullish =
+        latestEMA20 > latestEMA50 &&
+        latestPrice > latestEMA20 &&
+        rsi14 >= 50 &&
+        rsi14 <= 68;
+
+      const bearish =
+        latestEMA20 < latestEMA50 &&
+        latestPrice < latestEMA20 &&
+        rsi14 >= 32 &&
+        rsi14 <= 45;
+
+      let signal;
+      let explanation;
+
+      if (liquidity < MIN_LIQUIDITY_USD) {
+        signal = "DATI INSUFFICIENTI";
+        explanation =
+          "La liquidità della coppia è sotto la soglia " +
+          "didattica di $10.000. Il sistema non formula un esito.";
+      } else if (bullish) {
+        signal = "COMPRA — SIMULAZIONE DIDATTICA";
+        explanation =
+          "Le regole rialziste dell'esercizio risultano soddisfatte: " +
+          "EMA20 sopra EMA50, prezzo sopra EMA20 e RSI nell'intervallo " +
+          "definito. Non è una raccomandazione finanziaria.";
+      } else if (bearish) {
+        signal = "VENDI — SIMULAZIONE DIDATTICA";
+        explanation =
+          "Le regole ribassiste dell'esercizio risultano soddisfatte: " +
+          "EMA20 sotto EMA50, prezzo sotto EMA20 e RSI nell'intervallo " +
+          "definito. Non è una raccomandazione finanziaria.";
+      } else {
+        signal = "ATTENDI";
+        explanation =
+          "Le condizioni dell'esercizio non sono sufficientemente " +
+          "allineate per classificare il caso come rialzista o ribassista.";
+      }
+
+      const timestamp = new Date().toLocaleString("it-IT");
+
+      output.textContent =
+        "ANALISI DIDATTICA COMPLETATA\n\n" +
+        "Token: " + token + "\n" +
+        "DEX rilevato: " + (pair.dexId || "non specificato") + "\n" +
+        "Pool analizzata: " + poolAddress + "\n" +
+        "Prezzo del mercato: $" + formatPrice(price) + "\n" +
+        "Prezzo ultima candela oraria: $" +
+        formatPrice(latestPrice) + "\n" +
+        "Liquidità indicata: $" +
+        formatPrice(liquidity) + "\n" +
+        "Volume 24h indicato: $" +
+        formatPrice(volume24h) + "\n\n" +
+        "EMA 20: $" + formatPrice(latestEMA20) + "\n" +
+        "EMA 50: $" + formatPrice(latestEMA50) + "\n" +
+        "RSI 14: " + rsi14.toFixed(2) + "\n" +
+        "Candele analizzate: " + candles.length + "\n\n" +
+        "ESITO: " + signal + "\n\n" +
+        "MOTIVAZIONE\n" + explanation + "\n\n" +
+        "Orario dell'analisi: " + timestamp + "\n\n" +
+        "NOTA: dati pubblici soggetti a ritardi e limitazioni. " +
+        "Le soglie sono regole illustrative, non validate come " +
+        "strategia profittevole. Nessun ordine è stato eseguito.";
+
+      saveHistory({
+        time: timestamp,
+        token,
+        signal,
+        price: formatPrice(price)
+      });
+
+    } catch (error) {
+      output.textContent =
+        "ANALISI NON COMPLETATA\n\n" +
+        (error.message || "Errore sconosciuto") +
+        "\n\nNon è stato generato alcun segnale. " +
+        "Controlla l'indirizzo e riprova più tardi.";
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  renderHistory();
+})();
 
 
 
