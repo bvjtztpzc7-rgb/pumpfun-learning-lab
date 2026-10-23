@@ -1012,11 +1012,50 @@ signalOutput.style.marginTop = "10px";
 signalOutput.textContent =
   "Premi il pulsante per controllare la qualità dei dati e valutare il token.";
 
+
 signalButton.addEventListener("click", () => {
   const valutazione = valutaQualitaESegnale(pair);
+  const prezzo = Number(pair.priceUsd);
+
+  let sezioneTP = "TP INDICATIVO\n";
+
+  if (
+    valutazione.segnale === "COMPRA" &&
+    Number.isFinite(prezzo) &&
+    prezzo > 0
+  ) {
+    const tp = prezzo * 1.10;
+
+    sezioneTP +=
+      "Obiettivo teorico (+10%): $" +
+      tp.toLocaleString("it-IT", {
+        maximumSignificantDigits: 8
+      }) +
+      "\n";
+  } else if (
+    valutazione.segnale === "VENDI" &&
+    Number.isFinite(prezzo) &&
+    prezzo > 0
+  ) {
+    const tp = prezzo * 0.90;
+
+    sezioneTP +=
+      "Obiettivo teorico (-10%): $" +
+      tp.toLocaleString("it-IT", {
+        maximumSignificantDigits: 8
+      }) +
+      "\n";
+  } else {
+    sezioneTP +=
+      "Nessun obiettivo direzionale: segnale ATTENDI o prezzo non valido.\n";
+  }
+
+  sezioneTP +=
+    "Il TP è teorico e non garantisce che il prezzo venga raggiunto.";
 
   signalOutput.textContent =
     "AVVISO: " + valutazione.segnale + "\n\n" +
+    sezioneTP + "\n\n" +
     "CONTROLLO QUALITÀ DATI\n" +
     (valutazione.avvisi.length
       ? valutazione.avvisi.map(x => "• " + x).join("\n")
@@ -1024,6 +1063,7 @@ signalButton.addEventListener("click", () => {
     "\n\nMOTIVAZIONI\n" +
     valutazione.motivi.map(x => "• " + x).join("\n");
 });
+
 
 card.append(
   title,
